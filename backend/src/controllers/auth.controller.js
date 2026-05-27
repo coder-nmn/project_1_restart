@@ -9,6 +9,7 @@ async function registerController(req, res){
 
     
 
+    // checking that user exist previously or not on the basis of usernma or email
     const isUserExist = await userModel.findOne({
         $or : [
             {username},
@@ -16,6 +17,7 @@ async function registerController(req, res){
         ]
     })
 
+    //if user exist
     if(isUserExist){
         return res.status(409).json({
             message : "user already " + (isUserExist.email ==
@@ -23,8 +25,10 @@ async function registerController(req, res){
         })
     }
 
+    // converting pass into hash
     const hash = crypto.createHash('sha256').update(password).digest('hex')
 
+    //creating a user
     const user = await userModel.create({
         username,
         email,
@@ -32,13 +36,17 @@ async function registerController(req, res){
         profileImage,
         password : hash
     })
+
+    //creating token
     const token = jwt.sign({
         if : user._id
     },process.env.JWT_SECRET,
     {expiresIn: "1d"})
 
-    res.cookie("token", token)
+    res.cookie("token", token) // token creation
 
+
+    // server sending res that user registred
     res.status(201).json({
         message : "user registered finely.",
         user : {
