@@ -2,6 +2,7 @@ const postModel = require("../models/post.model")
 const ImageKit = require("@imagekit/nodejs")
 const { toFile } = require("@imagekit/nodejs")
 const jwt = require("jsonwebtoken")
+const identifyUser = require("../middlewares/auth.middleware")
 
 
 const imagekit = new ImageKit({
@@ -11,28 +12,6 @@ const imagekit = new ImageKit({
 // create post controller
 async function createPostController(req, res) {
     // console.log(req.body, req.file);
-
-    const token = req.cookies.token
-
-    if (!token) {
-        return res.status(401).json({
-            message: "unauthorised access, token not provided"
-        })
-    }
-    let decoded = null;
-
-    //token authrity manages here
-    try {
-
-        decoded = jwt.verify(token, process.env.JWT_SECRET)
-
-    } catch (error) {
-        return res.status(401).json({
-            message: "user not authorised"
-        })
-
-    }
-
 
     //image kit file upload code
     const file = await imagekit.files.upload({
@@ -46,7 +25,7 @@ async function createPostController(req, res) {
     const post = await postModel.create({
         caption: req.body.caption,
         imgUrl: file.url,
-        user: decoded.id
+        user: req.user.id
     })
 
     res.status(201).json({
@@ -65,19 +44,19 @@ async function createPostController(req, res) {
 //get post controller
 async function getPostController(req, res){
     
-    const token = req.cookies.token;
-    let decoded;
-    try {
+    // const token = req.cookies.token;
+    // let decoded;
+    // try {
         
-     decoded = jwt.verify(token, process.env.JWT_SECRET)
-    } catch (error) {
-        return res.status(401).json({
-            message : "token invalid"
-        })
+    //  decoded = jwt.verify(token, process.env.JWT_SECRET)
+    // } catch (error) {
+    //     return res.status(401).json({
+    //         message : "token invalid"
+    //     })
         
-    }
+    // }
 
-    const userId = decoded.id;
+    const userId = req.user.id;
 
     const posts = await postModel.find({
         user : userId
@@ -92,27 +71,10 @@ async function getPostController(req, res){
 
 
 // get post detail
-async function getPostDetails(req, res){
-    const token = req.cookies.token
+async function getPostDetailsController(req, res){
+    
 
-    if(!token){
-        return res.status(401).json({
-            message : "token not found, unauthorised"
-        })
-    }
-
-    let decoded = null;
-    try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET)
-        
-    } catch (error) {
-        res.status(401).json({
-            message  : " token wrong"
-        })
-        
-    }
-
-    const userId = decoded.id
+    const userId = req.user.id
     const postId = req.params.postId
 
 
@@ -143,8 +105,10 @@ async function getPostDetails(req, res){
     
 
 }
+
+
 module.exports = {
     createPostController,
     getPostController,
-    getPostDetails
+    getPostDetailsController
 }

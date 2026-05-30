@@ -19,7 +19,19 @@ const userSchema = new mongoose.Schema({
     profileImage : {
          type : String,
         default : "https://ik.imagekit.io/pugwcxtqc/default-avatar-icon-of-social-media-user-vector.jpg?updatedAt=1770737897328"
-    }
+    },
+    followers : [
+        {
+            type : mongoose.Schema.Types.ObjectId,
+            ref : "users"
+        }
+    ],
+    following : [
+        {
+            type : mongoose.Schema.Types.ObjectId,
+            ref : "users"
+        }
+    ]
     
 })
 
